@@ -472,3 +472,169 @@ func openFile(filename string) *os.File {
 	}
 	return r
 }
+
+// call req.Post ,only for easy
+func Put(origurl string, args ...interface{}) (resp *Response, err error) {
+	req := Requests()
+
+	// call request Get
+	resp, err = req.Post(origurl, args...)
+	return resp, err
+}
+
+// POST requests
+
+func (req *Request) Put(origurl string, args ...interface{}) (resp *Response, err error) {
+
+	req.httpreq.Method = "PUT"
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	// set params ?a=b&b=c
+	//set Header
+	params := []map[string]string{}
+	datas := []map[string]string{} // POST
+	files := []map[string]string{} //post file
+
+	//reset Cookies,
+	//Client.Do can copy cookie from client.Jar to req.Header
+	delete(req.httpreq.Header, "Cookie")
+
+	for _, arg := range args {
+		switch a := arg.(type) {
+		// arg is Header , set to request header
+		case Header:
+
+			for k, v := range a {
+				req.Header.Set(k, v)
+			}
+			// arg is "GET" params
+			// ?title=website&id=1860&from=login
+		case Params:
+			params = append(params, a)
+
+		case Datas: //Post form data,packaged in body.
+			datas = append(datas, a)
+		case Files:
+			files = append(files, a)
+		case Auth:
+			// a{username,password}
+			req.httpreq.SetBasicAuth(a[0], a[1])
+		}
+	}
+
+	disturl, _ := buildURLParams(origurl, params...)
+
+	if len(files) > 0 {
+		req.buildFilesAndForms(files, datas)
+
+	} else {
+		Forms := req.buildForms(datas...)
+		req.setBodyBytes(Forms) // set forms to body
+	}
+	//prepare to Do
+	URL, err := url.Parse(disturl)
+	if err != nil {
+		return nil, err
+	}
+	req.httpreq.URL = URL
+
+	req.ClientSetCookies()
+
+	req.RequestDebug()
+
+	res, err := req.Client.Do(req.httpreq)
+
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	resp = &Response{}
+	resp.R = res
+	resp.req = req
+	resp.ResponseDebug()
+	return resp, nil
+}
+
+// call req.Post ,only for easy
+func Delete(origurl string, args ...interface{}) (resp *Response, err error) {
+	req := Requests()
+
+	// call request Get
+	resp, err = req.Post(origurl, args...)
+	return resp, err
+}
+
+// POST requests
+
+func (req *Request) Delete(origurl string, args ...interface{}) (resp *Response, err error) {
+
+	req.httpreq.Method = "DELETE"
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	// set params ?a=b&b=c
+	//set Header
+	params := []map[string]string{}
+	datas := []map[string]string{} // POST
+	files := []map[string]string{} //post file
+
+	//reset Cookies,
+	//Client.Do can copy cookie from client.Jar to req.Header
+	delete(req.httpreq.Header, "Cookie")
+
+	for _, arg := range args {
+		switch a := arg.(type) {
+		// arg is Header , set to request header
+		case Header:
+
+			for k, v := range a {
+				req.Header.Set(k, v)
+			}
+			// arg is "GET" params
+			// ?title=website&id=1860&from=login
+		case Params:
+			params = append(params, a)
+
+		case Datas: //Post form data,packaged in body.
+			datas = append(datas, a)
+		case Files:
+			files = append(files, a)
+		case Auth:
+			// a{username,password}
+			req.httpreq.SetBasicAuth(a[0], a[1])
+		}
+	}
+
+	disturl, _ := buildURLParams(origurl, params...)
+
+	if len(files) > 0 {
+		req.buildFilesAndForms(files, datas)
+
+	} else {
+		Forms := req.buildForms(datas...)
+		req.setBodyBytes(Forms) // set forms to body
+	}
+	//prepare to Do
+	URL, err := url.Parse(disturl)
+	if err != nil {
+		return nil, err
+	}
+	req.httpreq.URL = URL
+
+	req.ClientSetCookies()
+
+	req.RequestDebug()
+
+	res, err := req.Client.Do(req.httpreq)
+
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	resp = &Response{}
+	resp.R = res
+	resp.req = req
+	resp.ResponseDebug()
+	return resp, nil
+}
